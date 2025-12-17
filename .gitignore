@@ -1,0 +1,15 @@
+# Python junk
+__pycache__/
+*.py[cod]
+
+# OBS / Video junk (Safety)
+*.mkv
+*.mp4
+*.xml
+*.json
+
+# Logs
+WoWCombatLog-*.txt
+
+# Virtual environments
+venv/
