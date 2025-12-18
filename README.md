@@ -1,29 +1,71 @@
-# WoW Raid Recorder (OBS Auto-Record & Chaptering)
+🛡️ WoWOBSAutoClip
 
-An automated tool for World of Warcraft that uses combat logs to trigger OBS recordings of boss encounters. It automatically names files by boss/result and embeds player deaths as video chapters.
+WoWOBSAutoClip is a lightweight Python automation tool for World of Warcraft players. It monitors your combat logs in real-time to intelligently control OBS Studio, ensuring you only record boss encounters while automatically adding player death chapters and organized filenames.
+✨ Features
 
-## ✨ Features
-- 🚀 **Auto-Start/Stop:** Records only when the boss pull starts.
-- 💀 **Death Tracking:** Automatically adds chapter markers when players die.
-- 🏷️ **Smart Naming:** Files are saved as `[Timestamp]_[BossName]_[WIN/WIPE].mkv`.
-- 🛠️ **No OBS Plugins:** Entirely self-contained using Python and MKVToolNix.
+    Automatic Recording: Starts recording on ENCOUNTER_START and stops on ENCOUNTER_END.
 
-## 📋 Prerequisites
-1. [OBS Studio](https://obsproject.com/)
-2. [MKVToolNix](https://mkvtoolnix.download/) (Must be installed for chapter embedding).
-3. Python 3.x
+    Smart Naming: Automatically renames files to [Timestamp]_[BossName]_[WIN/WIPE].mkv.
 
-## ⚙️ Setup
-1. Enable **WebSocket Server** in OBS (Tools -> WebSocket Server Settings).
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
+    Player Death Chapters: Embeds video chapters at the exact second a player dies (filters for -EU realms).
 
-   Update the Configuration section in WoWOBSAutoClip.py with your OBS password and WoW log path.
+    Lossless Processing: Uses mkvmerge to inject chapters instantly without re-encoding the video.
 
-🚀 Usage
+    Zero Plugins: No OBS chapter plugins required; the script handles all logic internally.
 
-Run the script before your raid:
+📋 Prerequisites
+
+    OBS Studio: Must be running with the WebSocket server enabled.
+
+    MKVToolNix: Required for the chapter embedding feature.
+
+    Python 3.x: Ensure Python is added to your system PATH.
+
+⚙️ Setup & Configuration
+1. World of Warcraft
+
+You must enable Advanced Combat Logging for death detection to work:
+
+    Esc -> Options -> Search for Advanced Combat Logging -> Enable.
+
+2. OBS WebSocket
+
+    Go to Tools -> WebSocket Server Settings.
+
+    Click Enable WebSocket Server.
+
+    Note your Server Port (default 4455) and Server Password.
+
+3. Script Configuration
+
+Open WoWOBSAutoClip.py and update the Configuration section at the top:
+Python
+
+# --- Configuration ---
+OBS_HOST = 'localhost'
+OBS_PORT = 4455
+OBS_PASSWORD = 'your_obs_password'
+WOW_LOG_DIRECTORY = r"C:\Games\World of Warcraft\_classic_\Logs"
+MKVMERGE_CMD = r"C:\Program Files\MKVToolNix\mkvmerge.exe"
+
+🚀 How to Use
+
+    Install dependencies:
+    Bash
+
+pip install obs-websocket-py
+
+Run the script:
 Bash
 
-python WoWOBSAutoClip.py
+    python WoWOBSAutoClip.py
+
+    Raid! The script will find the latest log file automatically and wait for the pull.
+
+🛠️ Troubleshooting
+
+    WinError 2: The script can't find mkvmerge.exe. Verify the path in the configuration.
+
+    No Chapters: Ensure "Advanced Combat Logging" is enabled in-game.
+
+    Filenames not changing: Ensure OBS is saving in .mkv format (Settings -> Output -> Recording).
