@@ -31,4 +31,24 @@
 ## 🚀 Usage
 Simply double-click `Run_WoWOBSAutoClip.bat`. The script will launch OBS, connect, and begin monitoring your latest WoW log automatically.
 
+### 🖥️ Console Preview
+```
+============================================
+      WoWOBSAutoClip - Raid Monitor
+============================================
+
+>> OBS is already running.
+>> FOUND: WoWCombatLog-010226_1800.txt
+>> Log file is fresh. Ready!
+>> OBS CONNECTED successfully.
+>> MONITORING ACTIVE <<
+
+!!! RECORDING STARTED: Jin'rokh the Breaker
+>> PLAYER DEATH: Playerone-EU
+>> PLAYER DEATH: Playertwo-EU
+!!! RECORDING STOPPED
+>> Waiting 5s to finalize log data...
+>> Giving OBS 3s to release file handle...
+>> FINALIZED: 2026-01-02 18-09-55_Jinrokh_the_Breaker_KILL.mkv
+```
 ---
