@@ -1,54 +1,74 @@
-# 🛡️ WoWOBSAutoClip
+# ⚔️ WoWOBSAutoClip (v1.3.0)
 ![Version](https://img.shields.io/github/v/release/Flarexi/WoWOBSAutoClip)
 
-**WoWOBSAutoClip** is a lightweight Python automation tool for World of Warcraft. It monitors combat logs in real-time to control OBS Studio, ensuring you only record boss encounters while automatically adding player death chapters and organized filenames.
+**Automated Combat Recorder for World of Warcraft**
+
+WoWOBSAutoClip is a lightweight Python utility that monitors your World of Warcraft combat logs and automatically triggers OBS Studio to record your boss encounters and Mythic+ runs. It handles the "boring" parts—starting, stopping, and naming files—so you can focus on the game.
 
 
-
----
 
 ## ✨ Features
-* **🚀 Auto-Launch:** Automatically starts OBS Studio if it isn't running.
-* **⏺️ Auto-Recording:** Starts on `ENCOUNTER_START` and stops on `ENCOUNTER_END`.
-* **🏷️ Smart Naming:** Saves files as `[Timestamp]_[BossName]_[KILL/WIPE].mkv`.
-* **💀 Death Chapters:** Embeds markers at the exact second players die (filters for `-EU` realms).
-* **⚡ Lossless Muxing:** Uses `mkvmerge` to inject chapters without re-encoding.
-* **🔒 File Safety:** Built-in retry logic to prevent "File in Use" errors during renaming.
 
----
+* **📦 Universal Support:** Works with **Retail**, **Classic (Cata/MoP)**, **TBC Anniversary**, and **Classic Era**.
+* **🏆 Mythic+ Intelligence:** Detects Challenge Mode starts, extracts the **Key Level** for the filename, and records the entire run as one file.
+* **📍 Smart Chapters:** Automatically adds MKV chapter markers for Boss Pulls (inside M+), Boss Defeated/Wipes, and Player Deaths.
+* **🌍 Region Agnostic:** Handles player names and realms globally (US, EU, KR, TW, OCE).
+* **🚀 Auto-Naming:** Files are saved with timestamps, boss names, key levels, and result (KILL/WIPE/SUCCESS).
 
 ## 📋 Prerequisites
-1. **[OBS Studio](https://obsproject.com/)**: Must have WebSocket enabled (Tools -> WebSocket Server Settings).
-2. **[MKVToolNix](https://mkvtoolnix.download/)**: Required for chapter embedding.
-3. **Python 3.x**: Added to Windows PATH.
 
----
+1.  **OBS Studio:** [Download here](https://obsproject.com/download).
+2.  **OBS WebSocket:** Ensure "WebSocket Server Settings" is enabled in OBS (Tools menu).
+3.  **MKVToolNix:** Required for injecting chapters. [Download here](https://mkvtoolnix.download/).
+4.  **Python 3.x:** [Download here](https://www.python.org/).
 
-## ⚙️ Setup
-1. **Enable Advanced Combat Logging** in WoW (Options -> Network).
-2. **Configure `WoWOBSAutoClip.py`**: Open the script and update your OBS password and file paths.
+> [!IMPORTANT]
+> You **must** enable **Advanced Combat Logging** in-game for Mythic+ data and Boss names to be captured accurately.
+> *Location: Menu -> Options -> Network -> Advanced Combat Logging (Check this box).*
 
-## 🚀 Usage
-Simply double-click `Run_WoWOBSAutoClip.bat`. The script will launch OBS, connect, and begin monitoring your latest WoW log automatically.
+
+
+## 🛠️ Setup
+
+1.  **Download** this repository and extract it to a folder.
+2.  **Configure the Script:** Open `WoWOBSAutoClip.py` in a text editor and update the entire `--- 1. Configuration ---` section:
+    * `OBS_PASSWORD`: Your OBS WebSocket password.
+    * `WOW_LOG_DIRECTORY`: Path to your WoW Logs folder (e.g., `_retail_\Logs`).
+    * `STOP_DELAY_SECONDS`: How long to keep recording after a boss dies (default: 5).
+    * `MKVMERGE_CMD`: The full path to your `mkvmerge.exe`.
+    * `OBS_EXE_PATH`: The full path to your `obs64.exe`.
+3.  **Run the Recorder:** * Simply double-click `Run_WoWOBSAutoClip.bat`. It will automatically install the required libraries on the first run.
+
+## 🎮 Supported Content
+
+| Content Type | Start Trigger | End Trigger | Markers |
+| :--- | :--- | :--- | :--- |
+| **Raid Bosses** | Encounter Start | Encounter End | Deaths |
+| **Mythic+** | Key Inserted | Dungeon End | Bosses & Deaths |
+| **Anniversary** | Encounter Start | Encounter End | Deaths |
+
+## ⚖️ License
+This project is open-source and free to use for the WoW community.
 
 ### 🖥️ Console Preview
-```
-============================================
-      WoWOBSAutoClip - Raid Monitor
-============================================
+--------------------------------------------------
+        W o W   O B S   A u t o C l i p
+   [ Raids  -  Mythic+  -  Retail  -  Classic  ]
+ --------------------------------------------------
+
+[SUCCESS] Monitoring WoW Logs...
+(Keep this window open while playing!)
 
 >> OBS is already running.
->> FOUND: WoWCombatLog-010226_1800.txt
->> Log file is fresh. Ready!
->> OBS CONNECTED successfully.
->> MONITORING ACTIVE <<
+>> OBS CONNECTED.
+>> MONITORING ACTIVE [RETAIL]
+>> LOG FILE: WoWCombatLog-010326_1430.txt
 
-!!! RECORDING STARTED: Jin'rokh the Breaker
->> PLAYER DEATH: Playerone-EU
->> PLAYER DEATH: Playertwo-EU
+!!! RECORDING STARTED: M+ The Necrotic Wake (+15)
+>> BOSS START: Blightbone
+>> PLAYER DEATH: Healername-Illidan-US
+>> BOSS DEFEATED: Blightbone
+>> Finalizing data in 5s...
 !!! RECORDING STOPPED
->> Waiting 5s to finalize log data...
->> Giving OBS 3s to release file handle...
->> FINALIZED: 2026-01-02 18-09-55_Jinrokh_the_Breaker_KILL.mkv
-```
+>> FINALIZED: 2026-01-03 14-30-05_MPlus_The_Necrotic_Wake_plus15_SUCCESS.mkv
 ---
