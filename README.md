@@ -1,4 +1,5 @@
 # 🛡️ WoWOBSAutoClip
+![Version](https://img.shields.io/github/v/release/Flarexi/WoWOBSAutoClip)
 
 **WoWOBSAutoClip** is a lightweight Python automation tool for World of Warcraft. It monitors combat logs in real-time to control OBS Studio, ensuring you only record boss encounters while automatically adding player death chapters and organized filenames.
 
