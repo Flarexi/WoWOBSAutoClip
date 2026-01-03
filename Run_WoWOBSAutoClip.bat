@@ -2,9 +2,14 @@
 title WoWOBSAutoClip Launcher
 set SCRIPT_NAME=WoWOBSAutoClip.py
 
-echo ============================================
-echo      WoWOBSAutoClip - Automated Raid Recorder
-echo ============================================
+:: Use a clean, subtle color (Cyan)
+color 0B
+
+echo.
+echo  --------------------------------------------------
+echo    	W o W   O B S   A u t o C l i p
+echo    [ Raids  -  Mythic+  -  Retail  -  Classic  ]
+echo  --------------------------------------------------
 echo.
 
 :: Check if Python is installed
@@ -24,8 +29,8 @@ if %errorlevel% neq 0 (
 )
 
 :: Run the script
-echo [SUCCESS] Launching %SCRIPT_NAME%...
-echo (Keep this window open while raiding!)
+echo [SUCCESS] Monitoring WoW Logs...
+echo (Keep this window open while playing!)
 echo.
 python %SCRIPT_NAME%
 
