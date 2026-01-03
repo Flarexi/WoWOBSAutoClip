@@ -36,13 +36,9 @@ REGEX_UNIT_DIED = re.compile(r".*?UNIT_DIED,.*,\"(?P<unit_name>.*?-.*?)\"")
 
 # --- 4. Global State ---
 state_lock = threading.Lock()
-is_recording = False
-is_finalizing = False 
-is_mplus_active = False
-obs_client = None
-recording_start_time = 0
+is_recording = is_finalizing = is_mplus_active = False
+obs_client = recording_start_time = current_enc_id = None
 current_event_name = "Unknown_Event"
-current_enc_id = None
 active_markers = []
 
 # --- 5. Functions ---
@@ -50,11 +46,15 @@ active_markers = []
 def launch_obs():
     try:
         tasklist = subprocess.check_output(['tasklist', '/FI', 'IMAGENAME eq obs64.exe'], text=True)
-        if 'obs64.exe' not in tasklist:
+        if 'obs64.exe' in tasklist:
+            print(f"{Color.CYAN}>> OBS is already running.{Color.END}")
+        else:
             print(f"{Color.YELLOW}>> Launching OBS Studio...{Color.END}")
             subprocess.Popen([OBS_EXE_PATH], cwd=os.path.dirname(OBS_EXE_PATH))
+            print(">> Waiting 10 seconds for OBS to initialize...")
             time.sleep(10)
-    except: pass
+    except Exception as e:
+        print(f"{Color.RED}!! Warning during OBS check: {e}{Color.END}")
 
 def connect_to_obs():
     global obs_client
@@ -62,9 +62,11 @@ def connect_to_obs():
         try:
             obs_client = obsws(OBS_HOST, OBS_PORT, OBS_PASSWORD)
             obs_client.connect()
-            print(f"{Color.GREEN}>> OBS CONNECTED.{Color.END}")
+            print(f"{Color.GREEN}>> OBS CONNECTED successfully.{Color.END}")
             return obs_client
-        except: time.sleep(5)
+        except:
+            print(f"{Color.YELLOW}!! Connection attempt {attempt}/3 failed...{Color.END}")
+            if attempt < 3: time.sleep(5)
     return None
 
 def toggle_recording(client, start=True, event_name=""):
@@ -84,23 +86,15 @@ def toggle_recording(client, start=True, event_name=""):
     except Exception as e: print(f"{Color.RED}!! OBS Error: {e}{Color.END}")
     return None
 
-def seconds_to_mkv_timecode(total_seconds):
-    td = timedelta(seconds=max(0, total_seconds))
-    t_micros = td.total_seconds() * 1000000
-    micros = t_micros % 1000000
-    t_secs = int(t_micros // 1000000)
-    mins, secs = divmod(t_secs, 60)
-    hrs, mins = divmod(mins, 60)
-    return f"{hrs:02d}:{mins:02d}:{secs:02d}.{int(micros // 1000):03d}"
-
 def process_and_mux_chapters(video_path):
     if not active_markers: return video_path
     try:
         xml_path = video_path.replace(".mkv", ".chapters.xml")
         xml_content = ['<?xml version="1.0" encoding="UTF-8"?>', '<Chapters>', '<EditionEntry>']
         for offset, label in active_markers:
-            xml_content.append(f'<ChapterAtom><ChapterDisplay><ChapterString>{label}</ChapterString></ChapterDisplay>')
-            xml_content.append(f'<ChapterTimeStart>{seconds_to_mkv_timecode(offset)}</ChapterTimeStart></ChapterAtom>')
+            td = timedelta(seconds=max(0, offset))
+            timecode = f"{int(td.total_seconds()//3600):02d}:{int((td.total_seconds()%3600)//60):02d}:{int(td.total_seconds()%60):02d}.{int(td.microseconds//1000):03d}"
+            xml_content.append(f'<ChapterAtom><ChapterDisplay><ChapterString>{label}</ChapterString></ChapterDisplay><ChapterTimeStart>{timecode}</ChapterTimeStart></ChapterAtom>')
         xml_content.append('</EditionEntry></Chapters>')
         with open(xml_path, 'w', encoding='utf-8') as f: f.write('\n'.join(xml_content))
         temp_out = video_path.replace(".mkv", "_mux.mkv")
@@ -113,32 +107,50 @@ def process_and_mux_chapters(video_path):
 def delayed_stop(delay_time, client, result_code):
     global current_event_name, is_recording, is_finalizing
     is_finalizing = True
-    print(f">> Finalizing data in {delay_time}s...")
+    print(f">> Waiting {delay_time}s to finalize log data...")
     time.sleep(delay_time)
     with state_lock:
         output_path = toggle_recording(client, start=False)
         is_recording = is_finalizing = False
         if output_path:
-            time.sleep(2) 
+            time.sleep(3) 
             final_path = process_and_mux_chapters(output_path)
             is_kill = (str(result_code) == '1')
-            suffix = "SUCCESS" if is_kill else "FAILED"
+            suffix = "KILL" if is_kill else "WIPE"
             new_name = f"{os.path.basename(final_path).replace('.mkv', '')}_{current_event_name}_{suffix}.mkv"
             try:
                 os.rename(final_path, os.path.join(os.path.dirname(final_path), new_name))
                 print(f"{(Color.GREEN if is_kill else Color.YELLOW)}{Color.BOLD}>> FINALIZED: {new_name}{Color.END}")
             except: pass
 
+def get_latest_combat_log_path(log_directory):
+    files = glob.glob(os.path.join(log_directory, "WoWCombatLog-*.txt"))
+    if not files: return None
+    latest_file = max(files, key=os.path.getmtime)
+    file_mod_time = os.path.getmtime(latest_file)
+    age_minutes = (time.time() - file_mod_time) / 60
+    
+    print(f"{Color.CYAN}>> FOUND: {os.path.basename(latest_file)}{Color.END}")
+    
+    if age_minutes > 10:
+        print(f"{Color.YELLOW}!! NOTE: This log is {age_minutes:.0f} mins old. Waiting for data...{Color.END}")
+    else:
+        print(f"{Color.GREEN}>> Log file is fresh. Ready!{Color.END}")
+    return latest_file
+
 def start_monitor():
     global is_recording, is_finalizing, is_mplus_active, active_markers, recording_start_time, current_event_name, current_enc_id
-    launch_obs(); client = connect_to_obs()
+    
+    launch_obs()
+    wow_log_path = get_latest_combat_log_path(WOW_LOG_DIRECTORY)
+    if not wow_log_path: return
+    
+    client = connect_to_obs()
     if not client: return
-    files = glob.glob(os.path.join(WOW_LOG_DIRECTORY, "WoWCombatLog-*.txt"))
-    wow_log_path = max(files, key=os.path.getmtime)
 
     with open(wow_log_path, 'r', encoding='utf-8', errors='ignore') as log_file:
         log_file.seek(0, os.SEEK_END)
-        print(f"{Color.CYAN}>> VERSION: 1.5{Color.END}\n>> MONITORING: {os.path.basename(wow_log_path)}\n")
+        print(f"{Color.GREEN}{Color.BOLD}>> MONITORING ACTIVE <<{Color.END}")
         try:
             while True:
                 line = log_file.readline()
@@ -164,7 +176,7 @@ def start_monitor():
                     elif m_me and is_mplus_active:
                         is_recording = is_mplus_active = False
                         threading.Thread(target=delayed_stop, args=(STOP_DELAY_SECONDS, client, m_me.group('result'))).start()
-        except KeyboardInterrupt: pass
+        except KeyboardInterrupt: print(f"\n{Color.YELLOW}>> Stopped by user.{Color.END}")
         finally: client.disconnect()
 
 if __name__ == '__main__':
