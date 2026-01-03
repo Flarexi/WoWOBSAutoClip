@@ -1,4 +1,4 @@
-# ⚔️ WoWOBSAutoClip (v1.3.0)
+# ⚔️ WoWOBSAutoClip
 ![Version](https://img.shields.io/github/v/release/Flarexi/WoWOBSAutoClip)
 
 **Automated Combat Recorder for World of Warcraft**
