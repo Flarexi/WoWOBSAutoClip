@@ -123,31 +123,39 @@ def delayed_stop(delay_time, client, result_code):
                 print(f"{(Color.GREEN if is_kill else Color.YELLOW)}{Color.BOLD}>> FINALIZED: {new_name}{Color.END}")
             except: pass
 
-def get_latest_combat_log_path(log_directory):
-    files = glob.glob(os.path.join(log_directory, "WoWCombatLog-*.txt"))
-    if not files: return None
-    latest_file = max(files, key=os.path.getmtime)
-    file_mod_time = os.path.getmtime(latest_file)
-    age_minutes = (time.time() - file_mod_time) / 60
-    
-    print(f"{Color.CYAN}>> FOUND: {os.path.basename(latest_file)}{Color.END}")
-    
-    if age_minutes > 10:
-        print(f"{Color.YELLOW}!! NOTE: This log is {age_minutes:.0f} mins old. Waiting for data...{Color.END}")
-    else:
-        print(f"{Color.GREEN}>> Log file is fresh. Ready!{Color.END}")
-    return latest_file
-
 def start_monitor():
     global is_recording, is_finalizing, is_mplus_active, active_markers, recording_start_time, current_event_name, current_enc_id
     
-    launch_obs()
-    wow_log_path = get_latest_combat_log_path(WOW_LOG_DIRECTORY)
-    if not wow_log_path: return
+    print(f"{Color.GREEN}{Color.BOLD}[SUCCESS] Monitoring WoW Logs...{Color.END}")
+    print(f"(Keep this window open while playing!)\n")
     
+    launch_obs()
+    
+    # 1. Path & Expansion Detection
+    files = glob.glob(os.path.join(WOW_LOG_DIRECTORY, "WoWCombatLog-*.txt"))
+    if not files: return print(f"{Color.RED}!! No logs found.{Color.END}")
+    wow_log_path = max(files, key=os.path.getmtime)
+    
+    path_norm = WOW_LOG_DIRECTORY.lower()
+    expansion = "World of Warcraft Retail"
+    if "_classic_era_" in path_norm: expansion = "World of Warcraft Classic Era"
+    elif "_classic_anniversary_" in path_norm: expansion = "World of Warcraft Anniversary"
+    elif "_classic_" in path_norm: expansion = "World of Warcraft Classic"
+
+    # 2. Information Display
+    print(f"{Color.CYAN}>> FULL LOG PATH: {wow_log_path}{Color.END}")
+    print(f"{Color.CYAN}>> {expansion}{Color.END}")
+
+    # 3. Freshness Check
+    age_minutes = (time.time() - os.path.getmtime(wow_log_path)) / 60
+    if age_minutes > 10:
+        print(f"{Color.YELLOW}!! NOTE: This log is {age_minutes:.0f} mins old. Waiting for data...{Color.END}")
+
+    # 4. OBS Connection
     client = connect_to_obs()
     if not client: return
 
+    # 5. Final Active Signal
     with open(wow_log_path, 'r', encoding='utf-8', errors='ignore') as log_file:
         log_file.seek(0, os.SEEK_END)
         print(f"{Color.GREEN}{Color.BOLD}>> MONITORING ACTIVE <<{Color.END}")
