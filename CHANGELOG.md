@@ -1,6 +1,11 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## [1.4.1] - 2026-01-04
+### Changed
+- **🎨 Refined UI Layout:** Initialization sequence reordered for maximum clarity.
+- **🏷️ Independent Expansion Labeling:** The game version (e.g., "World of Warcraft Classic") now appears on its own line for a more professional dashboard feel.
+- **✨ Simplified Status Prompt:** Cleaned up the final `MONITORING ACTIVE` line by removing redundant tags.
 
 ## [1.4.0] - 2026-01-03
 ### Added
