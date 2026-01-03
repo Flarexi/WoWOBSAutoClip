@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.0] - 2026-01-03
+### Added
+- **🎯 Expansion-Agnostic Results:** Re-engineered the `ENCOUNTER_END` logic to use end-anchored regex. This prevents the script from misidentifying "Group Size" or "Difficulty ID" as the success bit in MoP Classic where field counts vary between bosses.
+- **🛡️ Recording Overlap Protection:** Added an `is_finalizing` state gate. This prevents a new recording from starting while the previous clip is still in the 5-second post-kill finalization window, avoiding potential file handle conflicts or crashes.
+
+### Changed
+- **⚙️ Strict ID Matching:** The script now pairs `ENCOUNTER_START` and `ENCOUNTER_END` by their unique numeric ID. This ensures multi-phase encounters (like Iron Qon) do not trigger multiple recording events when sub-bosses or mounts die.
+- **⚡ Performance Optimization:** Combined state locks and reduced sleep-timer overhead (from 0.1s to 0.01s) to ensure the script catches events with millisecond precision during heavy combat.
+
 ## [1.3.0] - 2026-01-03
 ### Added
 - **🏆 M+ Support:** Support for Mythic+ (Retail) and MoP-style Challenge Modes.
