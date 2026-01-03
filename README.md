@@ -3,14 +3,14 @@
 
 **Automated Combat Recorder for World of Warcraft**
 
-WoWOBSAutoClip is a lightweight Python utility that monitors your World of Warcraft combat logs and automatically triggers OBS Studio to record your boss encounters and Mythic+ runs. It handles the "boring" parts—starting, stopping, and naming files—so you can focus on the game.
+WoWOBSAutoClip is a lightweight Python utility that monitors your World of Warcraft combat log and automatically triggers OBS Studio to record your boss encounters and Mythic+ runs. It handles the "boring" parts—starting, stopping, and naming files—so you can focus on the game and analyze later.
 
 
 
 ## ✨ Features
 
 * **📦 Universal Support:** Works with **Retail**, **Classic (Cata/MoP)**, **TBC Anniversary**, and **Classic Era**.
-* **🏆 Mythic+ Intelligence:** Detects Challenge Mode starts, extracts the **Key Level** for the filename, and records the entire run as one file.
+* **🏆 Mythic+:** Detects run start, extracts the **Key Level** for the filename, and records the entire run as one file.
 * **📍 Smart Chapters:** Automatically adds MKV chapter markers for Boss Pulls (inside M+), Boss Defeated/Wipes, and Player Deaths.
 * **🌍 Region Agnostic:** Handles player names and realms globally (US, EU, KR, TW, OCE).
 * **🚀 Auto-Naming:** Files are saved with timestamps, boss names, key levels, and result (KILL/WIPE/SUCCESS).
@@ -47,10 +47,8 @@ WoWOBSAutoClip is a lightweight Python utility that monitors your World of Warcr
 | **Mythic+** | Key Inserted | Dungeon End | Bosses & Deaths |
 | **Anniversary** | Encounter Start | Encounter End | Deaths |
 
-## ⚖️ License
-This project is open-source and free to use for the WoW community.
-
 ### 🖥️ Console Preview
+````
 --------------------------------------------------
         W o W   O B S   A u t o C l i p
    [ Raids  -  Mythic+  -  Retail  -  Classic  ]
@@ -71,4 +69,6 @@ This project is open-source and free to use for the WoW community.
 >> Finalizing data in 5s...
 !!! RECORDING STOPPED
 >> FINALIZED: 2026-01-03 14-30-05_MPlus_The_Necrotic_Wake_plus15_SUCCESS.mkv
----
+````
+## ⚖️ License
+This project is open-source and free to use for the WoW community.
