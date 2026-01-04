@@ -32,7 +32,7 @@ REGEX_START = re.compile(r".*?ENCOUNTER_START,(?P<enc_id>\d+),\"(?P<boss_name>.*
 REGEX_END = re.compile(r"ENCOUNTER_END,(?P<enc_id>\d+),.*,(?P<result>\d+)\s*$")
 REGEX_M_START = re.compile(r".*?CHALLENGE_MODE_START,\"(?P<zone_name>.*?)\",\d+,\d+,(?P<key_level>\d+),.*")
 REGEX_M_END = re.compile(r".*?CHALLENGE_MODE_END,\d+,(?P<result>\d+),.*")
-REGEX_UNIT_DIED = re.compile(r".*?UNIT_DIED,.*,\"(?P<unit_name>.*?-.*?)\"")
+REGEX_UNIT_DIED = re.compile(r".*?UNIT_DIED,.*?(?P<guid>Player-[\w-]+),\"(?P<unit_name>.*?)\"")
 
 # --- 4. Global State ---
 state_lock = threading.Lock()

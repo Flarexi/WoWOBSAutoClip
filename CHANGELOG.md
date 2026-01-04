@@ -1,6 +1,10 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## [1.4.2] - 2026-01-04
+### Changed
+- **✨ Better Death Tracking:** Implemented GUID-based filtering (`Player-` prefix) to prevent NPCs like "War-God Jalak" or "Mature Egg of Ji-Kun" from appearing as player deaths.
+
 ## [1.4.1] - 2026-01-04
 ### Changed
 - **🎨 Refined UI Layout:** Initialization sequence reordered for maximum clarity.
