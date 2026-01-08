@@ -1,6 +1,10 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## [1.4.3] - 2026-01-08
+### Added
+- **🏷️ Safe rename feature:** Introduced a safe_rename function with retries to handle file locking issues during renaming after recording finalization. Enhanced error handling and logging in the delayed_stop process, and refactored related logic for clarity and robustness.
+
 ## [1.4.2] - 2026-01-04
 ### Changed
 - **✨ Better Death Tracking:** Implemented GUID-based filtering (`Player-` prefix) to prevent NPCs like "War-God Jalak" or "Mature Egg of Ji-Kun" from appearing as player deaths.
