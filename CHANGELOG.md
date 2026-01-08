@@ -1,6 +1,12 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+
+## [1.4.3-Lite] - 2026-01-08
+### Added
+- **Lite Branch Created:** A lightweight version of the script that removes the dependency on MKVToolNix.
+- **Pure Automation:** Focuses strictly on starting, stopping, and renaming recordings based on combat events without injecting chapter markers.
+
 ## [1.4.2] - 2026-01-04
 ### Changed
 - **✨ Better Death Tracking:** Implemented GUID-based filtering (`Player-` prefix) to prevent NPCs like "War-God Jalak" or "Mature Egg of Ji-Kun" from appearing as player deaths.

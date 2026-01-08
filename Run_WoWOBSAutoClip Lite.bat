@@ -1,6 +1,6 @@
 @echo off
-title WoWOBSAutoClip Launcher
-set SCRIPT_NAME=WoWOBSAutoClip.py
+title WoWOBSAutoClip Lite Launcher
+set SCRIPT_NAME=%WoWOBSAutoClip Lite.py
 
 :: Use a clean, subtle color (Cyan)
 color 0B
@@ -32,6 +32,6 @@ if %errorlevel% neq 0 (
 echo [SUCCESS] Monitoring WoW Logs...
 echo (Keep this window open while playing!)
 echo.
-python %SCRIPT_NAME%
+python "%SCRIPT_NAME%"
 
 pause
