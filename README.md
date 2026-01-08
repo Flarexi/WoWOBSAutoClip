@@ -1,9 +1,10 @@
 # ⚔️ WoWOBSAutoClip
-![Version](https://img.shields.io/github/v/release/Flarexi/WoWOBSAutoClip)
+![Version](https://img.shields.io/github/v/release/Flarexi/WoWOBSAutoClip)  
+![Version](https://img.shields.io/github/v/release/Flarexi/WoWOBSAutoClip?filter=*lite*)
 
 **Automated Combat Recorder for World of Warcraft**
 
-WoWOBSAutoClip is a lightweight Python utility that monitors your World of Warcraft combat log and automatically triggers OBS Studio to record your boss encounters and Mythic+ runs. It handles the "boring" parts—starting, stopping, and naming files—so you can focus on the game and analyze later.
+WoWOBSAutoClip is a lightweight Python utility that monitors your World of Warcraft combat log and automatically triggers OBS Studio to record your boss encounters and Mythic+ runs. It handles the annoying parts—starting, stopping, and naming files—so you can focus on the game and analyze later.
 
 ## ✨ Features
 
