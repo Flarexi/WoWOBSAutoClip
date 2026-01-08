@@ -69,6 +69,16 @@ def connect_to_obs():
             if attempt < 3: time.sleep(5)
     return None
 
+def safe_rename(old_path, new_name):
+    new_path = os.path.join(os.path.dirname(old_path), new_name)
+    for i in range(5): # 5 Retries
+        try:
+            os.rename(old_path, new_path)
+            return True
+        except OSError:
+            time.sleep(1)
+    return False
+
 def toggle_recording(client, start=True, event_name=""):
     global recording_start_time, active_markers, current_event_name
     if not client: return None
@@ -101,27 +111,37 @@ def process_and_mux_chapters(video_path):
         subprocess.run([MKVMERGE_CMD, "-o", temp_out, "--chapters", xml_path, video_path], check=True, capture_output=True)
         os.replace(temp_out, video_path)
         if os.path.exists(xml_path): os.remove(xml_path)
-    except: pass
+    except Exception as e:
+        print(f"{Color.RED}!! Muxing Error: {e}{Color.END}")
     return video_path
 
 def delayed_stop(delay_time, client, result_code):
+    """Wait for log buffer, stop recording, mux chapters, and rename."""
     global current_event_name, is_recording, is_finalizing
     is_finalizing = True
     print(f">> Waiting {delay_time}s to finalize log data...")
     time.sleep(delay_time)
+    
+    output_path = toggle_recording(client, start=False)
+    
+    if output_path:
+        # Give Windows a moment to stabilize the file handle
+        time.sleep(2) 
+        final_path = process_and_mux_chapters(output_path)
+        
+        is_kill = (str(result_code) == '1')
+        suffix = "KILL" if is_kill else "WIPE"
+        timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+        new_name = f"{timestamp}_{current_event_name}_{suffix}.mkv"
+        
+        # Use safe_rename to handle file locking issues
+        if safe_rename(final_path, new_name):
+            print(f"{(Color.GREEN if is_kill else Color.YELLOW)}{Color.BOLD}>> FINALIZED: {new_name}{Color.END}\n")
+        else:
+            print(f"{Color.RED}!! Error: Could not rename {os.path.basename(final_path)} (File Locked){Color.END}")
+
     with state_lock:
-        output_path = toggle_recording(client, start=False)
         is_recording = is_finalizing = False
-        if output_path:
-            time.sleep(3) 
-            final_path = process_and_mux_chapters(output_path)
-            is_kill = (str(result_code) == '1')
-            suffix = "KILL" if is_kill else "WIPE"
-            new_name = f"{os.path.basename(final_path).replace('.mkv', '')}_{current_event_name}_{suffix}.mkv"
-            try:
-                os.rename(final_path, os.path.join(os.path.dirname(final_path), new_name))
-                print(f"{(Color.GREEN if is_kill else Color.YELLOW)}{Color.BOLD}>> FINALIZED: {new_name}{Color.END}")
-            except: pass
 
 def start_monitor():
     global is_recording, is_finalizing, is_mplus_active, active_markers, recording_start_time, current_event_name, current_enc_id
