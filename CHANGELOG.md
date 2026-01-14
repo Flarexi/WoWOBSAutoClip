@@ -1,6 +1,11 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+
+## [1.5.0] - 2026-01-14
+### Added
+- **⏱️ Frame-Accurate Sync (MARKERFIX):** Migrated from system-time offsets to log-based timestamp synchronization. Markers and chapters are now calculated using the actual combat log time, eliminating desync regardless of PC lag or log-writing delays.
+
 ## [1.4.3] - 2026-01-08
 ### Added
 - **🏷️ Safe rename feature:** Introduced a safe_rename function with retries to handle file locking issues during renaming after recording finalization. Enhanced error handling and logging in the delayed_stop process, and refactored related logic for clarity and robustness.
