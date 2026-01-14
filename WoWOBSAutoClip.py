@@ -28,20 +28,27 @@ class Color:
 os.system('') 
 
 # --- 3. Regex Patterns ---
-REGEX_START = re.compile(r".*?ENCOUNTER_START,(?P<enc_id>\d+),\"(?P<boss_name>.*?)\",.*")
-REGEX_END = re.compile(r"ENCOUNTER_END,(?P<enc_id>\d+),.*,(?P<result>\d+)\s*$")
-REGEX_M_START = re.compile(r".*?CHALLENGE_MODE_START,\"(?P<zone_name>.*?)\",\d+,\d+,(?P<key_level>\d+),.*")
-REGEX_M_END = re.compile(r".*?CHALLENGE_MODE_END,\d+,(?P<result>\d+),.*")
-REGEX_UNIT_DIED = re.compile(r".*?UNIT_DIED,.*?(?P<guid>Player-[\w-]+),\"(?P<unit_name>.*?)\"")
+REGEX_START = re.compile(r"^(?P<log_time>.*?)  ENCOUNTER_START,(?P<enc_id>\d+),\"(?P<boss_name>.*?)\",.*")
+REGEX_END = re.compile(r"^(?P<log_time>.*?)  ENCOUNTER_END,(?P<enc_id>\d+),.*,(?P<result>\d+)\s*$")
+REGEX_M_START = re.compile(r"^(?P<log_time>.*?)  CHALLENGE_MODE_START,\"(?P<zone_name>.*?)\",\d+,\d+,(?P<key_level>\d+),.*")
+REGEX_M_END = re.compile(r"^(?P<log_time>.*?)  CHALLENGE_MODE_END,\d+,(?P<result>\d+),.*")
+REGEX_UNIT_DIED = re.compile(r"^(?P<log_time>.*?)  UNIT_DIED,.*?(?P<guid>Player-[\w-]+),\"(?P<unit_name>.*?)\"")
 
 # --- 4. Global State ---
 state_lock = threading.Lock()
 is_recording = is_finalizing = is_mplus_active = False
-obs_client = recording_start_time = current_enc_id = None
+obs_client = log_start_time = current_enc_id = None  # MARKERFIX: log_start_time instead of recording_start_time
 current_event_name = "Unknown_Event"
 active_markers = []
 
 # --- 5. Functions ---
+
+def parse_log_time(time_str):
+    try:
+        # Expected format: "1/8/2026 23:53:13.7792"
+        return datetime.strptime(time_str, "%m/%d/%Y %H:%M:%S.%f")
+    except:
+        return None
 
 def launch_obs():
     try:
@@ -80,14 +87,13 @@ def safe_rename(old_path, new_name):
     return False
 
 def toggle_recording(client, start=True, event_name=""):
-    global recording_start_time, active_markers, current_event_name
+    global active_markers, current_event_name
     if not client: return None
     try:
         if start:
             active_markers = []
             current_event_name = re.sub(r'[^\w\s-]', '', event_name).strip().replace(" ", "_")
             client.call(requests.StartRecord())
-            recording_start_time = time.time()
             print(f"{Color.CYAN}{Color.BOLD}!!! RECORDING STARTED: {event_name}{Color.END}")
         else:
             print(f"{Color.CYAN}!!! RECORDING STOPPED{Color.END}")
@@ -116,35 +122,27 @@ def process_and_mux_chapters(video_path):
     return video_path
 
 def delayed_stop(delay_time, client, result_code):
-    """Wait for log buffer, stop recording, mux chapters, and rename."""
     global current_event_name, is_recording, is_finalizing
     is_finalizing = True
     print(f">> Waiting {delay_time}s to finalize log data...")
     time.sleep(delay_time)
-    
     output_path = toggle_recording(client, start=False)
-    
     if output_path:
-        # Give Windows a moment to stabilize the file handle
         time.sleep(2) 
         final_path = process_and_mux_chapters(output_path)
-        
         is_kill = (str(result_code) == '1')
         suffix = "KILL" if is_kill else "WIPE"
         timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
         new_name = f"{timestamp}_{current_event_name}_{suffix}.mkv"
-        
-        # Use safe_rename to handle file locking issues
         if safe_rename(final_path, new_name):
             print(f"{(Color.GREEN if is_kill else Color.YELLOW)}{Color.BOLD}>> FINALIZED: {new_name}{Color.END}\n")
         else:
             print(f"{Color.RED}!! Error: Could not rename {os.path.basename(final_path)} (File Locked){Color.END}")
-
     with state_lock:
         is_recording = is_finalizing = False
 
 def start_monitor():
-    global is_recording, is_finalizing, is_mplus_active, active_markers, recording_start_time, current_event_name, current_enc_id
+    global is_recording, is_finalizing, is_mplus_active, active_markers, log_start_time, current_event_name, current_enc_id
     
     print(f"{Color.GREEN}{Color.BOLD}[SUCCESS] Monitoring WoW Logs...{Color.END}")
     print(f"(Keep this window open while playing!)\n")
@@ -184,23 +182,39 @@ def start_monitor():
                 line = log_file.readline()
                 if not line:
                     time.sleep(0.01); continue
+                
                 m_s, m_e, m_ms, m_me, m_d = REGEX_START.search(line), REGEX_END.search(line), REGEX_M_START.search(line), REGEX_M_END.search(line), REGEX_UNIT_DIED.search(line)
+                
                 with state_lock:
                     if (m_ms or m_s) and (is_recording or is_finalizing): continue
+                    
+                    # MARKERFIX: Always capture the log timestamp if we find a match
+                    match = m_ms or m_s or m_d or m_e or m_me
+                    current_log_time = parse_log_time(match.group('log_time')) if match else None
+
                     if m_ms and not is_recording:
+                        log_start_time = current_log_time
                         toggle_recording(client, start=True, event_name=f"M+ {m_ms.group('zone_name')} (+{m_ms.group('key_level')})")
                         current_event_name, is_recording, is_mplus_active = f"MPlus_{m_ms.group('zone_name')}_plus{m_ms.group('key_level')}".replace(" ", "_"), True, True
+                    
                     elif m_s and not is_recording:
+                        log_start_time = current_log_time
                         current_enc_id = m_s.group('enc_id')
                         toggle_recording(client, start=True, event_name=m_s.group('boss_name'))
                         is_recording, is_mplus_active = True, False
+                    
                     elif m_d and is_recording:
-                        active_markers.append((time.time() - recording_start_time, f"Died: {m_d.group('unit_name')}"))
-                        print(f"{Color.RED}>> PLAYER DEATH: {m_d.group('unit_name')}{Color.END}")
+                        if current_log_time and log_start_time:
+                            # Accurate Offset: Difference between current log line time and start log line time
+                            offset = (current_log_time - log_start_time).total_seconds()
+                            active_markers.append((offset, f"Died: {m_d.group('unit_name')}"))
+                            print(f"{Color.RED}>> PLAYER DEATH: {m_d.group('unit_name')} (Log Sync: {offset:.1f}s){Color.END}")
+                    
                     elif m_e and is_recording and not is_mplus_active:
                         if m_e.group('enc_id') == current_enc_id:
                             is_recording = False
                             threading.Thread(target=delayed_stop, args=(STOP_DELAY_SECONDS, client, m_e.group('result'))).start()
+                    
                     elif m_me and is_mplus_active:
                         is_recording = is_mplus_active = False
                         threading.Thread(target=delayed_stop, args=(STOP_DELAY_SECONDS, client, m_me.group('result'))).start()
